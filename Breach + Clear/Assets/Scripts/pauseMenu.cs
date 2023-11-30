@@ -11,7 +11,7 @@ public class pauseMenu : MonoBehaviour
     void Start()
     {
         pauseMenuUI.SetActive(false);
-        Screen.SetResolution(255, 255, true);
+        Screen.SetResolution(540, 540, true);
     }
     
     void Update()
