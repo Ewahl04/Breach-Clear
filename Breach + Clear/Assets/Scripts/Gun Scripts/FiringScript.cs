@@ -1,12 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+//remove .UI after reload animation
+using UnityEngine.UI;
 
 public class FiringScript : MonoBehaviour
 {
     [Header("Stats")]
     public int damage;
-    public float fireRate, range, reloadTime, timeBetweenShots;
+    public float fireRate, range, reloadTime, timeBetweenShots, reloadWindow;
     public int magazineSize, bulletsPerTap;
     public bool allowButtonHold;
     int bulletsLeft, bulletsShot;
@@ -44,6 +46,15 @@ public class FiringScript : MonoBehaviour
     public AudioClip shotSound;
     public float shotVolume = 1f;
 
+    // remove when guns animation is finished
+    [Header("TEMP Reload Indicator")]
+    public Image badgeIndicator;
+    public Image badgeShadowOne;
+    public Image badgeShadowTwo;
+    private Color iNDColor;
+    private Color startColor;
+    private Color startShadowOne;
+    private Color startShadowTwo;
 
     private void Awake()
     {
@@ -172,12 +183,88 @@ public class FiringScript : MonoBehaviour
     {
         Debug.Log("Reloading");
         reloading = true;
-        Invoke("ReloadFinished", reloadTime);
+        StartCoroutine(Reloading());
     }
     private void ReloadFinished()
     {
         Debug.Log("Finished Reloading");
+        // remove all color stuff when animation for guns is finished
+        badgeIndicator.color = startColor;
+        badgeShadowOne.color = startShadowOne;
+        badgeShadowTwo.color = startShadowTwo;
         bulletsLeft = magazineSize;
         reloading = false;
     }
+
+    IEnumerator Reloading()
+    {
+        bool newMag = false;
+        bool pullOne = false;
+        bool magPulled = false;
+        float exitTime = reloadWindow;
+        float timer = 0;
+    
+        // remove all color stuff when animation for guns is finished
+        startColor = badgeIndicator.color;
+        startShadowOne = badgeShadowOne.color;
+        startShadowTwo = badgeShadowTwo.color;
+
+        iNDColor = new Color(1, 0.2f, 0, 1);
+        badgeIndicator.color = iNDColor;
+        badgeShadowOne.color = iNDColor;
+        badgeShadowTwo.color = iNDColor;
+
+        while (exitTime > timer)
+        {
+
+            if (!magPulled)
+            {
+                yield return new WaitForSeconds(reloadTime / 2);
+                Debug.Log("Mag Pulled");
+                iNDColor = new Color(1, 0.5f, 0, 1);
+                magPulled = true;
+                
+            }
+
+            if (magPulled)
+            {
+                if (Input.GetKeyDown("e"))
+                {
+                    //Insert new mag
+                    yield return new WaitForSeconds(reloadTime / 2);
+                    Debug.Log("New Mag In");
+                    iNDColor = new Color(0.3f, 0.65f, 0, 1);
+                    newMag = true;
+                }
+
+                if (Input.GetKeyDown("l") && newMag && !pullOne)
+                {
+                    // pull back bolt
+                    Debug.Log("Pulled Back Bolt");
+                    yield return new WaitForSeconds(0.01f);
+                    pullOne = true;
+                }
+
+                if (Input.GetKeyDown("l") && pullOne)
+                {
+                    // let go of bolt
+                    Debug.Log("Bolt Reset");
+                    ReloadFinished();
+                    yield break;
+                }
+            }
+
+            badgeIndicator.color = iNDColor;
+            badgeShadowOne.color = iNDColor;
+            badgeShadowTwo.color = iNDColor;
+
+            timer += Time.deltaTime;
+            yield return null;
+        }
+
+        Debug.Log("Reload Failed");
+        reloading = false;
+        yield return null;
+    }
 }
+

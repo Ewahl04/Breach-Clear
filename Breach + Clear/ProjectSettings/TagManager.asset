@@ -25,7 +25,7 @@ TagManager:
   - UI
   - Weapons
   - Rendering
-  - 
+  - isPlayer
   - 
   - whatIsGround
   - 
