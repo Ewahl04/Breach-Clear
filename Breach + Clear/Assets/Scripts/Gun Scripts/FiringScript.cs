@@ -46,6 +46,12 @@ public class FiringScript : MonoBehaviour
     public AudioClip shotSound;
     public float shotVolume = 1f;
 
+    public AudioClip magPullSound;
+    public AudioClip magInsertSound;
+    public AudioClip boltBackSound;
+    public AudioClip boltResetSound;
+    public float reloadVolume = 1f;
+
     // remove when guns animation is finished
     [Header("TEMP Reload Indicator")]
     public Image badgeIndicator;
@@ -61,7 +67,12 @@ public class FiringScript : MonoBehaviour
         bulletsLeft = magazineSize;
         readyToShoot = true;
 
-        
+        //remove color stuff after guns animation finished
+        startColor = badgeIndicator.color;
+        startShadowOne = badgeShadowOne.color;
+        startShadowTwo = badgeShadowTwo.color;
+
+
     }
     private void Update()
     {
@@ -181,17 +192,16 @@ public class FiringScript : MonoBehaviour
     }
     private void Reload()
     {
-        Debug.Log("Reloading");
         reloading = true;
         StartCoroutine(Reloading());
     }
     private void ReloadFinished()
     {
-        Debug.Log("Finished Reloading");
         // remove all color stuff when animation for guns is finished
         badgeIndicator.color = startColor;
         badgeShadowOne.color = startShadowOne;
         badgeShadowTwo.color = startShadowTwo;
+
         bulletsLeft = magazineSize;
         reloading = false;
     }
@@ -205,14 +215,13 @@ public class FiringScript : MonoBehaviour
         float timer = 0;
     
         // remove all color stuff when animation for guns is finished
-        startColor = badgeIndicator.color;
-        startShadowOne = badgeShadowOne.color;
-        startShadowTwo = badgeShadowTwo.color;
 
         iNDColor = new Color(1, 0.2f, 0, 1);
         badgeIndicator.color = iNDColor;
         badgeShadowOne.color = iNDColor;
         badgeShadowTwo.color = iNDColor;
+
+        audioSource.PlayOneShot(magPullSound, reloadVolume);
 
         while (exitTime > timer)
         {
@@ -220,7 +229,6 @@ public class FiringScript : MonoBehaviour
             if (!magPulled)
             {
                 yield return new WaitForSeconds(reloadTime / 2);
-                Debug.Log("Mag Pulled");
                 iNDColor = new Color(1, 0.5f, 0, 1);
                 magPulled = true;
                 
@@ -228,11 +236,11 @@ public class FiringScript : MonoBehaviour
 
             if (magPulled)
             {
-                if (Input.GetKeyDown("e"))
+                if (Input.GetKeyDown("e") && !pullOne)
                 {
                     //Insert new mag
+                    audioSource.PlayOneShot(magInsertSound, reloadVolume);
                     yield return new WaitForSeconds(reloadTime / 2);
-                    Debug.Log("New Mag In");
                     iNDColor = new Color(0.3f, 0.65f, 0, 1);
                     newMag = true;
                 }
@@ -240,7 +248,7 @@ public class FiringScript : MonoBehaviour
                 if (Input.GetKeyDown("l") && newMag && !pullOne)
                 {
                     // pull back bolt
-                    Debug.Log("Pulled Back Bolt");
+                    audioSource.PlayOneShot(boltBackSound, reloadVolume);
                     yield return new WaitForSeconds(0.01f);
                     pullOne = true;
                 }
@@ -248,7 +256,7 @@ public class FiringScript : MonoBehaviour
                 if (Input.GetKeyDown("l") && pullOne)
                 {
                     // let go of bolt
-                    Debug.Log("Bolt Reset");
+                    audioSource.PlayOneShot(boltResetSound, reloadVolume);
                     ReloadFinished();
                     yield break;
                 }
@@ -262,6 +270,12 @@ public class FiringScript : MonoBehaviour
             yield return null;
         }
 
+        iNDColor = new Color(0, 0, 0, 1);
+        badgeIndicator.color = iNDColor;
+        badgeShadowOne.color = iNDColor;
+        badgeShadowTwo.color = iNDColor;
+
+        bulletsLeft = 0;
         Debug.Log("Reload Failed");
         reloading = false;
         yield return null;
