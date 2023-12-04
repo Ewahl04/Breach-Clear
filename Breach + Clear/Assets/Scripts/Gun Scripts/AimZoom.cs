@@ -10,7 +10,6 @@ public class AimZoom : MonoBehaviour
     public float zoomSpeed = 200f;
     private float currentFOV;
     public Animator animator;
-    private bool isScoped = false;
 
 
     void Start()
@@ -23,11 +22,11 @@ public class AimZoom : MonoBehaviour
     {
         mainCamera.fieldOfView = Mathf.Clamp(mainCamera.fieldOfView, zoomFOV, startFOV);
 
-        if (Input.GetKey(KeyCode.LeftShift))
+        if (GameManager.isSprinting)
         {
             mainCamera.fieldOfView += zoomSpeed * Time.deltaTime;
-            isScoped = false;
-            animator.SetBool("Aiming", isScoped);
+            GameManager.isScoped = false;
+            animator.SetBool("Aiming", GameManager.isScoped);
             animator.SetBool("Sprinting", true);
         }
 
@@ -36,18 +35,18 @@ public class AimZoom : MonoBehaviour
 
             animator.SetBool("Sprinting", false);
             
-            if (Input.GetMouseButton(1) && !Input.GetKey(KeyCode.LeftShift))
+            if (Input.GetMouseButton(1) && !GameManager.isSprinting && !GameManager.reloading)
             {
                 mainCamera.fieldOfView -= zoomSpeed * Time.deltaTime;
-                isScoped = true;
-                animator.SetBool("Aiming", isScoped);
+                GameManager.isScoped = true;
+                animator.SetBool("Aiming", GameManager.isScoped);
             }
 
             else
             {
                 mainCamera.fieldOfView += zoomSpeed * Time.deltaTime;
-                isScoped = false;
-                animator.SetBool("Aiming", isScoped);
+                GameManager.isScoped = false;
+                animator.SetBool("Aiming", GameManager.isScoped);
             }
         }
     }    

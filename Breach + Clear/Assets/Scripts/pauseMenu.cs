@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class pauseMenu : MonoBehaviour
 {
-    public static bool GameIsPaused = false;
     public GameObject pauseMenuUI;
     public GameObject playerUI;
 
@@ -18,7 +17,7 @@ public class pauseMenu : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            if (GameIsPaused)
+            if (GameManager.GameIsPaused)
             {
                 Resume();
             }
@@ -35,7 +34,7 @@ public class pauseMenu : MonoBehaviour
         pauseMenuUI.SetActive(false);
         playerUI.SetActive(true);
         Time.timeScale = 1f;
-        GameIsPaused = false;
+        GameManager.GameIsPaused = false;
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
     }
@@ -44,7 +43,7 @@ public class pauseMenu : MonoBehaviour
         pauseMenuUI.SetActive(true);
         playerUI.SetActive(false);
         Time.timeScale = 0f;
-        GameIsPaused = true;
+        GameManager.GameIsPaused = true;
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
     }

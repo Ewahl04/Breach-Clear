@@ -19,7 +19,7 @@ public class PlayerMovement : MonoBehaviour
     [Header("Ground Check")]
     public float playerHeight;
     public LayerMask whatIsGround;
-    bool grounded;
+    bool grounded, fakeGravCheck;
 
     [Header("Slope Handling")]
     public float maxSlopeAngle;
@@ -29,10 +29,6 @@ public class PlayerMovement : MonoBehaviour
     public float crouchSpeed;
     public float crouchYScale;
     private float startYScale;
-
-    [Header("Keybinds")]
-    public KeyCode sprintKey = KeyCode.LeftShift;
-    public KeyCode crouchKey = KeyCode.LeftControl;
 
     public Transform orientation;
 
@@ -66,9 +62,13 @@ public class PlayerMovement : MonoBehaviour
     
     private void Update()
     {
+
+        Debug.Log(OnSlope());
+        
         //ground check
         grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
-
+        fakeGravCheck = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
+        
         MyInput();
         StateHandler();
 
@@ -79,7 +79,7 @@ public class PlayerMovement : MonoBehaviour
             rb.drag = 5;
 
         //reduce speed when ADS
-        if (Input.GetMouseButton(1))
+        if (GameManager.isScoped)
         {
             crouchSpeed = startCrouchSpeed / speedReductionAmount;
             walkSpeed = startWalkSpeed / speedReductionAmount;
@@ -102,13 +102,13 @@ public class PlayerMovement : MonoBehaviour
         horizontalInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
 
-        if (Input.GetKeyDown(crouchKey))
+        if (Input.GetKeyDown(GameManager.crouchKey))
         {
             transform.localScale = new Vector3(transform.localScale.x, crouchYScale, transform.localScale.z);
             rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
         }
 
-        if (Input.GetKeyUp(crouchKey))
+        if (Input.GetKeyUp(GameManager.crouchKey))
         {
             transform.localScale = new Vector3(transform.localScale.x, startYScale, transform.localScale.z);
         }
@@ -119,15 +119,24 @@ public class PlayerMovement : MonoBehaviour
         // calculate move direction
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
 
-        rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
+        if (!OnSlope())
+        {
+            rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
+        }
 
         //on slope
         if (OnSlope())
         {
-            rb.AddForce(GetSlopeMoveDirection() * moveSpeed * 20f, ForceMode.Force);
+            rb.AddForce(GetSlopeMoveDirection() * moveSpeed * 10f, ForceMode.Force);
 
             if (rb.velocity.y > 0)
-                rb.AddForce(Vector3.down * 80f, ForceMode.Force);
+                rb.AddForce(Vector3.down * 10f, ForceMode.Force);
+        }
+
+        //artificial grav
+        if (!fakeGravCheck)
+        {
+            rb.AddForce(Vector3.down * 30f, ForceMode.Force);
         }
 
         //no grav on slopes
@@ -137,8 +146,9 @@ public class PlayerMovement : MonoBehaviour
     private void StateHandler()
     {
         // Mode - Sprinting
-        if(grounded && Input.GetKey(sprintKey))
+        if(grounded && Input.GetKey(GameManager.sprintKey))
         {
+            GameManager.isSprinting = true;
             state = MovementState.sprinting;
             moveSpeed = sprintSpeed;
         }
@@ -146,6 +156,7 @@ public class PlayerMovement : MonoBehaviour
         //walking
         else if (grounded)
         {
+            GameManager.isSprinting = false;
             state = MovementState.walking;
             moveSpeed = walkSpeed;
         }
@@ -153,12 +164,14 @@ public class PlayerMovement : MonoBehaviour
         //air
         else
         {
+            GameManager.isSprinting = false;
             state = MovementState.air;
         }
 
         //crouching
-        if (Input.GetKey(crouchKey))
+        if (Input.GetKey(GameManager.crouchKey))
         {
+            GameManager.isSprinting = false;
             state = MovementState.crouching;
             moveSpeed = crouchSpeed;
         }

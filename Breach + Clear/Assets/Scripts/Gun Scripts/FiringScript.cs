@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 //remove .UI after reload animation
 using UnityEngine.UI;
+using RayFire;
 
 public class FiringScript : MonoBehaviour
 {
@@ -26,12 +27,13 @@ public class FiringScript : MonoBehaviour
     public float returnSpeed;
 
     //bools 
-    bool shooting, readyToShoot, reloading;
+    bool shooting, readyToShoot;
 
     [Header("References")]
     public Camera fpsCam;
     public RaycastHit rayHit;
     public PlayerCam Recoil_Script;
+    public RayfireGun rayfireGun;
 
     [Header("Graphics")]
     public CameraShake camShake;
@@ -66,6 +68,7 @@ public class FiringScript : MonoBehaviour
     {
         bulletsLeft = magazineSize;
         readyToShoot = true;
+        GameManager.reloading = false;
 
         //remove color stuff after guns animation finished
         startColor = badgeIndicator.color;
@@ -83,10 +86,10 @@ public class FiringScript : MonoBehaviour
         if (allowButtonHold) shooting = Input.GetMouseButton(0);
         else shooting = Input.GetMouseButtonDown(0);
 
-        if (Input.GetKeyDown(KeyCode.R) && bulletsLeft < magazineSize && !reloading) Reload();
+        if (Input.GetKeyDown(KeyCode.R) && bulletsLeft < magazineSize && !GameManager.reloading && !GameManager.GameIsPaused) Reload();
 
         //Shoot
-        if (readyToShoot && shooting && !reloading && bulletsLeft > 0)
+        if (readyToShoot && shooting && !GameManager.reloading && bulletsLeft > 0 && !GameManager.GameIsPaused)
         {
             bulletsShot = bulletsPerTap;
             Shoot();
@@ -98,6 +101,7 @@ public class FiringScript : MonoBehaviour
     private void Shoot()
     {
         readyToShoot = false;
+        rayfireGun.Shoot();
 
         StartCoroutine(Recoil_Script.RecoilFire(recoilX, recoilY, aimRecoilX, aimRecoilY, snappiness, returnSpeed));
 
@@ -126,43 +130,43 @@ public class FiringScript : MonoBehaviour
 
             if (rayHit.transform.CompareTag("isConcrete"))
             {
-                Instantiate(impactConcrete, rayHit.point, Quaternion.LookRotation(rayHit.normal), targetObject);
+                Instantiate(impactConcrete, rayHit.point, Quaternion.LookRotation(rayHit.normal));
             }
             if (rayHit.transform.CompareTag("isDirt"))
             {
-                Instantiate(impactDirt, rayHit.point, Quaternion.LookRotation(rayHit.normal), targetObject);
+                Instantiate(impactDirt, rayHit.point, Quaternion.LookRotation(rayHit.normal));
             }
             if (rayHit.transform.CompareTag("isBrick"))
             {
-                Instantiate(impactBrick, rayHit.point, Quaternion.LookRotation(rayHit.normal), targetObject);
+                Instantiate(impactBrick, rayHit.point, Quaternion.LookRotation(rayHit.normal));
             }
             if (rayHit.transform.CompareTag("isFoliage"))
             {
-                Instantiate(impactFoliage, rayHit.point, Quaternion.LookRotation(rayHit.normal), targetObject);
+                Instantiate(impactFoliage, rayHit.point, Quaternion.LookRotation(rayHit.normal));
             }
             if (rayHit.transform.CompareTag("isGlass"))
             {
-                Instantiate(impactGlass, rayHit.point, Quaternion.LookRotation(rayHit.normal), targetObject);
+                Instantiate(impactGlass, rayHit.point, Quaternion.LookRotation(rayHit.normal));
             }
             if (rayHit.transform.CompareTag("isMetal"))
             {
-                Instantiate(impactMetal, rayHit.point, Quaternion.LookRotation(rayHit.normal), targetObject);
+                Instantiate(impactMetal, rayHit.point, Quaternion.LookRotation(rayHit.normal));
             }
             if (rayHit.transform.CompareTag("isPlaster"))
             {
-                Instantiate(impactPlaster, rayHit.point, Quaternion.LookRotation(rayHit.normal), targetObject);
+                Instantiate(impactPlaster, rayHit.point, Quaternion.LookRotation(rayHit.normal));
             }
             if (rayHit.transform.CompareTag("isRock"))
             {
-                Instantiate(impactRock, rayHit.point, Quaternion.LookRotation(rayHit.normal), targetObject);
+                Instantiate(impactRock, rayHit.point, Quaternion.LookRotation(rayHit.normal));
             }
             if (rayHit.transform.CompareTag("isWater"))
             {
-                Instantiate(impactWater, rayHit.point, Quaternion.LookRotation(rayHit.normal), targetObject);
+                Instantiate(impactWater, rayHit.point, Quaternion.LookRotation(rayHit.normal));
             }
             if (rayHit.transform.CompareTag("isWood"))
             {
-                Instantiate(impactWood, rayHit.point, Quaternion.LookRotation(rayHit.normal), targetObject);
+                Instantiate(impactWood, rayHit.point, Quaternion.LookRotation(rayHit.normal));
             }
             if (rayHit.transform.CompareTag("isEnemy"))
             {
@@ -192,7 +196,7 @@ public class FiringScript : MonoBehaviour
     }
     private void Reload()
     {
-        reloading = true;
+        GameManager.reloading = true;
         StartCoroutine(Reloading());
     }
     private void ReloadFinished()
@@ -203,7 +207,7 @@ public class FiringScript : MonoBehaviour
         badgeShadowTwo.color = startShadowTwo;
 
         bulletsLeft = magazineSize;
-        reloading = false;
+        GameManager.reloading = false;
     }
 
     IEnumerator Reloading()
@@ -277,7 +281,7 @@ public class FiringScript : MonoBehaviour
 
         bulletsLeft = 0;
         Debug.Log("Reload Failed");
-        reloading = false;
+        GameManager.reloading = false;
         yield return null;
     }
 }

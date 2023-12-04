@@ -42,7 +42,7 @@ public class PlayerCam : MonoBehaviour
         orientation.rotation = Quaternion.Euler(0, yRotation, 0);
         transform.localRotation = Quaternion.Euler(xRotation, yRotation, 0);
 
-        if (Input.GetMouseButton(1) && !Input.GetKey(KeyCode.LeftShift))
+        if (GameManager.isScoped)
         {
             sensX = currentSensX / zoomSensitivityReduction;
             sensY = currentSensY / zoomSensitivityReduction;
