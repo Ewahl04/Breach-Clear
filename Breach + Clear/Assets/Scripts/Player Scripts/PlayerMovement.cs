@@ -13,13 +13,12 @@ public class PlayerMovement : MonoBehaviour
     private float startSprintSpeed;
     private float startCrouchSpeed;
     public float speedReductionAmount;
-
     public float groundDrag;
 
     [Header("Ground Check")]
     public float playerHeight;
     public LayerMask whatIsGround;
-    bool grounded, fakeGravCheck;
+    bool grounded;
 
     [Header("Slope Handling")]
     public float maxSlopeAngle;
@@ -63,12 +62,11 @@ public class PlayerMovement : MonoBehaviour
     private void Update()
     {
 
-        Debug.Log(OnSlope());
-        
+        Debug.Log(grounded);
+
         //ground check
-        grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
-        fakeGravCheck = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
-        
+        grounded = Physics.Raycast(transform.position + new Vector3(0,0.05f,0), Vector3.down, playerHeight * 0.5f + 0.35f, whatIsGround);
+
         MyInput();
         StateHandler();
 
@@ -121,22 +119,27 @@ public class PlayerMovement : MonoBehaviour
 
         if (!OnSlope())
         {
-            rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
+            rb.AddForce(moveDirection.normalized * moveSpeed * 7.25f, ForceMode.Force);
+        }
+
+        //airborn
+
+        if (!grounded)
+        {
+            rb.AddForce(moveDirection.normalized * moveSpeed * 3f, ForceMode.Force);
+            rb.AddForce(Vector3.down * 30f, ForceMode.Force);
         }
 
         //on slope
         if (OnSlope())
         {
-            rb.AddForce(GetSlopeMoveDirection() * moveSpeed * 10f, ForceMode.Force);
+            rb.AddForce(GetSlopeMoveDirection() * moveSpeed * 7.25f, ForceMode.Force);
 
             if (rb.velocity.y > 0)
+            {
                 rb.AddForce(Vector3.down * 10f, ForceMode.Force);
-        }
-
-        //artificial grav
-        if (!fakeGravCheck)
-        {
-            rb.AddForce(Vector3.down * 30f, ForceMode.Force);
+            }
+                
         }
 
         //no grav on slopes
@@ -189,7 +192,7 @@ public class PlayerMovement : MonoBehaviour
         if(Physics.Raycast(transform.position, Vector3.down, out slopeHit, playerHeight * 0.5f + 0.3f))
         {
             float angle = Vector3.Angle(Vector3.up, slopeHit.normal);
-            return angle < maxSlopeAngle && angle != 0;
+            return angle <= maxSlopeAngle && angle != 0;
         }
 
         return false;
@@ -215,6 +218,11 @@ public class PlayerMovement : MonoBehaviour
                 Vector3 limitedVel = flatVel.normalized * moveSpeed;
                 rb.velocity = new Vector3(limitedVel.x, rb.velocity.y, limitedVel.z);
             }
+        }
+
+        if (rb.velocity.y < -30f)
+        {
+            rb.velocity = new Vector3(rb.velocity.x, -30f, rb.velocity.z);
         }
     }
 }
